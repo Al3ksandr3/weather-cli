@@ -1,0 +1,20 @@
+{
+  "name": "weather-cli",
+  "version": "1.0.0",
+  "description": "CLI that allows user to get information about the weather in the specified city.",
+  "main": "index.js",
+  "bin": {
+    "weather": "weather.js"
+  },
+  "type": "module",
+  "scripts": {},
+  "keywords": [
+    "cli",
+    "weather"
+  ],
+  "author": "Aleksmanu",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.2.0"
+  }
+}
