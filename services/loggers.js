@@ -38,30 +38,34 @@ export function printSuccessMessage(successMessage) {
 ////////////////////////////////////////////////////////////
 
 export function printHelpInfo() {
-  const rawText = `${chalk.bgCyan(" HELP INFO: ")}
+  const helpInfoPrefix = chalk.bgCyan(chalk.bold("HELP INFO:"));
 
-    ${chalk.bgMagenta(" 1. ")} CLI can be accessed using ${chalk.bgBlueBright(
-    " weather "
-  )} command;
-    ${chalk.bgMagenta(" 2. ")} Simply using ${chalk.bgBlueBright(
-    " weather "
-  )} command returns weather data if the "city" and "token" were set before, otherwise, CLI asks for missing data pieces; 
-    ${chalk.bgMagenta(" 3. ")} Arguments list includes:
+  const styledStuff = {
+    dot: chalk.yellowBright(chalk.bold("•")),
+    weather: chalk.greenBright(chalk.bold("weather")),
+    hArg: chalk.magentaBright(chalk.bold("-h")),
+    cArg: chalk.magentaBright(chalk.bold("-c")),
+    akArg: chalk.magentaBright(chalk.bold("-ak")),
+    help: chalk.blue(chalk.italic("help")),
+    city: chalk.blue(chalk.italic("city")),
+    apiKey: chalk.blue(chalk.italic("API key")),
+    cityExampleText: chalk.yellowBright(chalk.italic("-c Tbilisi")),
+    apiKeyExampleText: chalk.yellowBright(chalk.italic("-t aj3hh3ghjjf16r3y")),
+  };
 
-    ${chalk.bgBlueBright(
-      " -h "
-    )} stands for "help" and can be used to get the information about arguments list;  
-    ${chalk.bgBlueBright(
-      " -c "
-    )} stands for "city" and can be used to set/change the current city of a user by poviding [CITY_NAME] value (for example: -c Tbilisi); 
-    ${chalk.bgBlueBright(
-      " -t "
-    )} stands for "token" and can be used to set/change the current token of a user by poviding [TOKEN] value (for example: -t aj3hh3ghjjf16r3y); 
-    `;
+  const styledHelpInfo = getTextWithoutExtraSpaces(`${helpInfoPrefix}
 
-  const rawTextWithoutExtraSpaces = getTextWithoutExtraSpaces(rawText);
+  ${styledStuff.dot} CLI can be accessed and provided arguments with by using ${styledStuff.weather} command;
+  ${styledStuff.dot} Simply using ${styledStuff.weather} command returns weather data if the ${styledStuff.city} and ${styledStuff.apiKey} were set before, otherwise, CLI asks for missing data pieces; 
+   
+  ${styledStuff.hArg} - stands for ${styledStuff.help} and can be used to get the information about possible arguments list that can be processed by CLI;  
+  ${styledStuff.cArg} - stands for ${styledStuff.city} and can be used to set/change city of a user (for example: ${styledStuff.cityExampleText}); 
+  ${styledStuff.akArg} - stands for ${styledStuff.apiKey} and can be used to set/change API key of a user (for example: ${styledStuff.apiKeyExampleText}); 
+    `);
 
-  console.log(rawTextWithoutExtraSpaces);
+  const styledDelpInfoWithOffset = createTopOffsetForText(styledHelpInfo);
+
+  console.log(styledDelpInfoWithOffset);
 }
 
 ////////////////////////////////////////////////////////////
