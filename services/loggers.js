@@ -1,20 +1,38 @@
 import chalk from "chalk";
 
 import {
-  getStringWithoutExtraSpaces,
+  getTextWithoutExtraSpaces,
   createTopOffsetForText,
-} from "../utils/functions.js";
+} from "../utils/transformers.js";
 
 // ------ START ------ //
 
 export function printErrorMessage(errorMessage) {
-  console.log(createTopOffsetForText(chalk.bgRed(`${errorMessage}`)));
+  const errorMessagePrefix = chalk.bold("ERROR:");
+
+  const styledErrorMessage = chalk.bgRed(
+    `${errorMessagePrefix} ${errorMessage}`
+  );
+
+  const styledErrorMessageWithOffset =
+    createTopOffsetForText(styledErrorMessage);
+
+  console.log(styledErrorMessageWithOffset);
 }
 
 ////////////////////////////////////////////////////////////
 
 export function printSuccessMessage(successMessage) {
-  console.log(createTopOffsetForText(chalk.bgGreen(`${successMessage}`)));
+  const successMessagePrefix = chalk.bold("SUCCESS:");
+
+  const styledSuccessMessage = chalk.bgGreen(
+    `${successMessagePrefix} ${successMessage}`
+  );
+
+  const styledSuccessMessageWithOffset =
+    createTopOffsetForText(styledSuccessMessage);
+
+  console.log(styledSuccessMessageWithOffset);
 }
 
 ////////////////////////////////////////////////////////////
@@ -41,43 +59,49 @@ export function printHelpInfo() {
     )} stands for "token" and can be used to set/change the current token of a user by poviding [TOKEN] value (for example: -t aj3hh3ghjjf16r3y); 
     `;
 
-  const rawTextWithoutExtraSpaces = getStringWithoutExtraSpaces(rawText);
+  const rawTextWithoutExtraSpaces = getTextWithoutExtraSpaces(rawText);
 
   console.log(rawTextWithoutExtraSpaces);
 }
 
 ////////////////////////////////////////////////////////////
 
-export function printWrongTypeValueForKeyMessage(key) {
-  const boldedKey = chalk.bold(`${key}(-${key[0]})`);
+export function printWrongTypeValueForKeyMessage(key, keyShorthand) {
+  const wrongTypeMessagePrefix = chalk.bold("WARNING:");
 
-  const exampleText = chalk.bold(chalk.italic("-c Tbilisi"));
+  const styledKey = chalk.bold(`${key}(${keyShorthand})`);
 
-  console.log(
-    createTopOffsetForText(
-      chalk.bgYellow(
-        `Seems like you have provided ${boldedKey} argument without specifying any meaningful value after it. Please, use the same ${boldedKey} argument followed by some value you want to set for it (for instance: ${exampleText} will set your current city to Tbilisi).`
-      )
-    )
+  const styledExample = chalk.bold(chalk.italic("-c Tbilisi"));
+
+  const styledWrongTypeMessage = chalk.bgYellow(
+    `${wrongTypeMessagePrefix} seems like you have provided ${styledKey} argument without specifying any meaningful value after it. Please, use the same ${styledKey} argument followed by some value you want to set for it (for instance: ${styledExample} will set your current city to Tbilisi).`
   );
+
+  const styledWrongTypeMessageWithOffset = createTopOffsetForText(
+    styledWrongTypeMessage
+  );
+
+  console.log(styledWrongTypeMessageWithOffset);
 }
 
 ////////////////////////////////////////////////////////////
 
 export function printUnknownKeysMessage(listOfUnknownKeys) {
-  const joinedUnknownKeys = listOfUnknownKeys
-    .map((unknownKey) => "-" + unknownKey)
-    .join("/");
+  const unknownKeysMessagePrefix = chalk.bold("ATTENTION:");
 
-  console.log(
-    createTopOffsetForText(
-      chalk.bgBlueBright(
-        `Seems like you have provided some keys which are unknown for us: ${chalk.bold(
-          joinedUnknownKeys
-        )}. `
-      )
-    )
+  const unknownKeys = chalk.bold(
+    listOfUnknownKeys.map((unknownKey) => "-" + unknownKey).join("/")
   );
+
+  const styledUnknownKeysMessage = chalk.bgBlueBright(
+    `${unknownKeysMessagePrefix} seems like you have provided some keys which are unknown for us: ${unknownKeys}.`
+  );
+
+  const styledUnknownKeysMessageWithOffset = createTopOffsetForText(
+    styledUnknownKeysMessage
+  );
+
+  console.log(styledUnknownKeysMessageWithOffset);
 }
 
 // ------ END ------ //

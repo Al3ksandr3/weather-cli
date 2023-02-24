@@ -1,8 +1,13 @@
 import { homedir } from "os";
-import { join, parse } from "path";
-import { promises } from "fs";
+import { join } from "path";
+import { promises as fsPromises } from "fs";
 import { createInterface } from "readline";
 import chalk from "chalk";
+
+import {
+  CANNOT_SAVE_VALUE_FOR_KEY,
+  STORAGE_FILE_CORRUPTED,
+} from "../utils/constants.js";
 
 // ------ START ------ //
 
@@ -11,24 +16,25 @@ const storageFilePath = join(homedir(), "weather-cli.json");
 export async function mapKeyToValueAndSave(key, value) {
   let dataToBeSaved = { [key]: value };
 
-  /* Here we make sure that storage file exists in a home dircetory in which case we return "true". If not, 
-    error is handled inisde "isExist" method and we get "false" as a result. */
+  /* Here we make sure that storage file (named "weather-cli.json") exists in a home dircetory in which case we 
+    return "true". If not, error is handled inisde "isExist" function and we get "false" as a result. */
+
   const storageFileExists = await isExist(storageFilePath);
 
   if (storageFileExists) {
-    /* In case file exists it might still be corrupted and can't be properly parsed. Therefore,
-    reading of such file might generate errors associated with corrupted file content. In case 
-    such scenario occurs, it has to be handled properly by allowing user to either completely 
-    overwrite the file with the prepared-to-save data or cancel the process of saving completely. */
+    /* In case file exists it might be corrupted and can't be properly parsed by JSON.parse() method. Therefore,
+    parsing of such file might generate errors due to the corrupted file content. In case  such scenario occurs, 
+    it has to be handled properly by allowing user to either completely overwrite the file with the prepared-to-save
+    data passed through CLI or cancel the process of saving completely. */
 
     const storageReadResult = await readDataFromStorageAndReturnParsingResult(
       storageFilePath
     );
 
-    if (storageReadResult === null || storageReadResult === "y") {
+    if (storageReadResult === "y") {
       await saveDataToStorage(dataToBeSaved, storageFilePath);
     } else if (storageReadResult === "n") {
-      return "EXIT";
+      throw new Error(STORAGE_FILE_CORRUPTED);
     } else {
       dataToBeSaved = storageReadResult;
 
@@ -47,7 +53,7 @@ export async function mapKeyToValueAndSave(key, value) {
 
 async function isExist(path) {
   try {
-    await promises.stat(path);
+    await fsPromises.stat(path);
     return true;
   } catch (error) {
     return false;
@@ -58,9 +64,9 @@ async function isExist(path) {
 
 async function saveDataToStorage(data, path) {
   try {
-    await promises.writeFile(path, JSON.stringify(data), "utf-8");
+    await fsPromises.writeFile(path, JSON.stringify(data), "utf-8");
   } catch (error) {
-    console.log("File can't be written to...");
+    throw new Error(CANNOT_SAVE_VALUE_FOR_KEY);
   }
 }
 
@@ -68,14 +74,12 @@ async function saveDataToStorage(data, path) {
 
 async function readDataFromStorageAndReturnParsingResult(path) {
   try {
-    const fileContent = await promises.readFile(path, "utf-8");
+    const fileContent = await fsPromises.readFile(path, "utf-8");
 
     const parsingResult = await parseJSONAndReturnResult(fileContent);
 
     return parsingResult;
-  } catch (error) {
-    return "Unknown error";
-  }
+  } catch (error) {}
 }
 
 ////////////////////////////////////////////////////////////
@@ -95,13 +99,15 @@ async function getUserResponse(questionText, permittedResponses = null) {
   if (!permittedResponses || permittedResponses.includes(userResponse)) {
     readLineInterface.close();
   } else {
-    const wrongResponseMessage =
-      chalk.bgYellow(` ATTENTION: `) +
-      ` seems like you have provided value ${chalk.bgRed(
-        ` ${userResponse} `
-      )} that does not match any of the expected values ${chalk.bgGreen(
-        ` ${permittedResponses.join("/")} `
-      )}. In order to proceed, please, provide a value either in lower- or upper-case matching some expected value.`;
+    const attention_STYLED = chalk.bgYellow(chalk.bold(` ATTENTION: `));
+    const currentUserResponse_STYLED = chalk.bgRed(
+      chalk.bold(` ${userResponse} `)
+    );
+    const permittedReponses_STYLED = chalk.bgGreen(
+      chalk.bold(` ${permittedResponses.join("/")} `)
+    );
+
+    const wrongResponseMessage = `${attention_STYLED} seems like you have provided value ${currentUserResponse_STYLED} that does not match any of the expected values ${permittedReponses_STYLED}. In order to proceed, please, provide a value, either in lower- or upper-case, matching some expected value`;
 
     console.log(wrongResponseMessage);
 

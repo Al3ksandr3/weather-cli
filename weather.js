@@ -2,13 +2,19 @@
 
 import chalk from "chalk";
 
-import { getArgs } from "./utils/functions.js";
-import { WRONG_DATA_TYPE } from "./utils/constants.js";
+import { getArgs } from "./utils/extractors.js";
+
+import {
+  WRONG_DATA_TYPE,
+  NO_ARGUMENTS_PASSED,
+  CANNOT_SAVE_VALUE_FOR_KEY,
+  STORAGE_FILE_CORRUPTED,
+} from "./utils/constants.js";
 
 import {
   printErrorMessage,
-  printSuccessMessage,
   printHelpInfo,
+  printSuccessMessage,
   printWrongTypeValueForKeyMessage,
   printUnknownKeysMessage,
 } from "./services/loggers.js";
@@ -22,7 +28,8 @@ import { validateValueForKeyByDataTypeOrThrow } from "./services/validators.js";
 async function validateValueForKeyAndInitializeSavingProcess(
   valueToValidateByDataType,
   desiredDataType,
-  key
+  key,
+  keyShorthand
 ) {
   try {
     // STEP I - validate data provided for key;
@@ -36,12 +43,24 @@ async function validateValueForKeyAndInitializeSavingProcess(
 
     // STEP III - if saving process completes successfully, print success message;
     printSuccessMessage(
-      `Value for ${chalk.bold(key)} field was successfully set/modified!`
+      `value for ${chalk.bold(key)} field was successfully set/modified!`
     );
   } catch (error) {
     // STEP II.2 - if validation or saving process fails, handle errors;
     if (error.message === WRONG_DATA_TYPE) {
-      printWrongTypeValueForKeyMessage(key);
+      printWrongTypeValueForKeyMessage(key, keyShorthand);
+    }
+
+    if (error.message === CANNOT_SAVE_VALUE_FOR_KEY) {
+      printErrorMessage(
+        `value for ${chalk.bold(`${key}(${keyShorthand})`)} can not be set!`
+      );
+    }
+
+    if (error.message === STORAGE_FILE_CORRUPTED) {
+      printErrorMessage(
+        "seems like storage file is corrupted. Please, fix it manually or override with the new data using CLI."
+      );
     }
   }
 }
@@ -51,9 +70,13 @@ async function validateValueForKeyAndInitializeSavingProcess(
 // ------ CLI ENTRY POINT ------ //
 
 async function startCLI() {
-  const knownKeys = ["h", "c", "t"];
+  const knownKeys = ["h", "c", "ak"]; // h - help, c - city, ak - API key
 
   const argsObject = getArgs(process);
+
+  if (argsObject === NO_ARGUMENTS_PASSED) {
+    // implement weather displaying logic;
+  }
 
   if (argsObject.h) {
     printHelpInfo();
@@ -63,15 +86,17 @@ async function startCLI() {
     await validateValueForKeyAndInitializeSavingProcess(
       argsObject.c,
       "string",
-      "city"
+      "city",
+      "-c"
     );
   }
 
-  if (argsObject.t) {
+  if (argsObject.ak) {
     await validateValueForKeyAndInitializeSavingProcess(
-      argsObject.t,
+      argsObject.ak,
       "string",
-      "token"
+      "apiKey",
+      "-ak"
     );
   }
 
