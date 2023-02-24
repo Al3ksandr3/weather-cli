@@ -1,0 +1,1 @@
+export const WRONG_DATA_TYPE = "WRONG_DATA_TYPE";

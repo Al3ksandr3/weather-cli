@@ -42,3 +42,9 @@ export function getStringWithoutExtraSpaces(text) {
 
   return stringWithoutExtraSpaces;
 }
+
+////////////////////////////////////////////////////////////
+
+export function createTopOffsetForText(text) {
+  return `\n${text}`;
+}

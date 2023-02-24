@@ -1,13 +1,21 @@
-import { getStringWithoutExtraSpaces } from "../utils/utils.js";
 import chalk from "chalk";
+
+import {
+  getStringWithoutExtraSpaces,
+  createTopOffsetForText,
+} from "../utils/functions.js";
 
 // ------ START ------ //
 
-export function printErrorMessage(errorMessage) {}
+export function printErrorMessage(errorMessage) {
+  console.log(createTopOffsetForText(chalk.bgRed(`${errorMessage}`)));
+}
 
 ////////////////////////////////////////////////////////////
 
-export function printSuccessMessage(successMessage) {}
+export function printSuccessMessage(successMessage) {
+  console.log(createTopOffsetForText(chalk.bgGreen(`${successMessage}`)));
+}
 
 ////////////////////////////////////////////////////////////
 
@@ -40,10 +48,35 @@ export function printHelpInfo() {
 
 ////////////////////////////////////////////////////////////
 
-export function printMissingValueForArgumentMessage(argument) {
+export function printWrongTypeValueForKeyMessage(key) {
+  const boldedKey = chalk.bold(`${key}(-${key[0]})`);
+
+  const exampleText = chalk.bold(chalk.italic("-c Tbilisi"));
+
   console.log(
-    getStringWithoutExtraSpaces(`Seems like you have provided "${argument}" argument without specifying the value after it. 
-    Please, use the same "${argument}" argument followed by the value you want to set for it.`)
+    createTopOffsetForText(
+      chalk.bgYellow(
+        `Seems like you have provided ${boldedKey} argument without specifying any meaningful value after it. Please, use the same ${boldedKey} argument followed by some value you want to set for it (for instance: ${exampleText} will set your current city to Tbilisi).`
+      )
+    )
+  );
+}
+
+////////////////////////////////////////////////////////////
+
+export function printUnknownKeysMessage(listOfUnknownKeys) {
+  const joinedUnknownKeys = listOfUnknownKeys
+    .map((unknownKey) => "-" + unknownKey)
+    .join("/");
+
+  console.log(
+    createTopOffsetForText(
+      chalk.bgBlueBright(
+        `Seems like you have provided some keys which are unknown for us: ${chalk.bold(
+          joinedUnknownKeys
+        )}. `
+      )
+    )
   );
 }
 
