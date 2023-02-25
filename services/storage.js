@@ -7,6 +7,8 @@ import {
   CORRUPTED_STORAGE_FILE,
   USER_ACCEPTED_CORRUPTED_STORAGE_FILE,
   UNKNOWN_ERROR,
+  STORAGE_FILE_DOES_NOT_EXIST,
+  VALUE_IS_NOT_SET_FOR_KEY,
 } from "../utils/constants.js";
 
 import { getUserResponse } from "./prompt.js";
@@ -63,27 +65,6 @@ export async function saveKeyValuePair(key, value) {
 
 ////////////////////////////////////////////////////////////
 
-export async function retrieveDataFromStorageByKey(key) {
-  const storageFileExists = await isExist(storageFilePath);
-
-  if (storageFileExists) {
-    const storageContentReadResult =
-      await readDataFromStorageAndReturnParsingResult(storageFilePath);
-
-    if (storageContentReadResult === "y") {
-    } else if (storageContentReadResult === "n") {
-      throw new Error(CORRUPTED_STORAGE_FILE);
-    } else {
-      dataToBeSaved[key] = value;
-    }
-  }
-
-  if (!storageFileExists) {
-  }
-}
-
-////////////////////////////////////////////////////////////
-
 async function isExist(path) {
   try {
     await fsPromises.stat(path);
@@ -100,6 +81,35 @@ async function saveDataToStorage(data, path) {
     await fsPromises.writeFile(path, JSON.stringify(data), "utf-8");
   } catch (error) {
     throw new Error(CANNOT_SAVE_VALUE_FOR_KEY);
+  }
+}
+
+////////////////////////////////////////////////////////////
+
+export async function retrieveValueFromStorageByKey(key) {
+  const storageFileExists = await isExist(storageFilePath);
+
+  if (storageFileExists) {
+    const storageContentReadResult =
+      await readDataFromStorageAndReturnParsingResult(storageFilePath);
+
+    if (storageContentReadResult === "y") {
+      await saveDataToStorage({}, storageFilePath);
+    } else if (storageContentReadResult === "n") {
+      throw new Error(USER_ACCEPTED_CORRUPTED_STORAGE_FILE);
+    } else {
+      const retrievedValue = storageContentReadResult[key];
+
+      if (retrievedValue === undefined) {
+        throw new Error(VALUE_IS_NOT_SET_FOR_KEY);
+      } else {
+        return retrievedValue;
+      }
+    }
+  }
+
+  if (!storageFileExists) {
+    throw new Error(STORAGE_FILE_DOES_NOT_EXIST);
   }
 }
 
