@@ -1,20 +1,21 @@
 import { homedir } from "os";
 import { join } from "path";
 import { promises as fsPromises } from "fs";
-import { createInterface } from "readline";
-import chalk from "chalk";
 
 import {
   CANNOT_SAVE_VALUE_FOR_KEY,
-  STORAGE_FILE_CORRUPTED,
+  CORRUPTED_STORAGE_FILE,
+  USER_ACCEPTED_CORRUPTED_STORAGE_FILE,
   UNKNOWN_ERROR,
 } from "../utils/constants.js";
+
+import { getUserResponse } from "./prompt.js";
 
 // ------ START ------ //
 
 const storageFilePath = join(homedir(), "weather-cli.json");
 
-export async function mapKeyToValueAndSave(key, value) {
+export async function saveKeyValuePair(key, value) {
   let dataToBeSaved = { [key]: value };
 
   /* Here we make sure that storage file (named "weather-cli.json") exists in a home dircetory in which case we 
@@ -28,16 +29,26 @@ export async function mapKeyToValueAndSave(key, value) {
     it has to be handled properly by allowing user to either completely overwrite the file with the prepared-to-save
     data passed through CLI or cancel the process of saving completely. */
 
-    const storageReadResult = await readDataFromStorageAndReturnParsingResult(
-      storageFilePath
-    );
+    const storageContentReadResult =
+      await readDataFromStorageAndReturnParsingResult(storageFilePath);
 
-    if (storageReadResult === "y") {
+    /* Reading of storage file content can led us to three distinct scanarios:
+      1. If "y" is returned it means that storage file data wsa corrupted and can't be processed by JSON.parse().
+        Therefore, user was asked whether or not an app can overwrite the file completely and erase all corrupted
+        data and user responded with "yes" option;
+      2. If "n" is returned it means that storage file data wsa corrupted and can't be processed by JSON.parse().
+        Therefore, user was asked whether or not an app can overwrite the file completely and erase all corrupted
+        data and user responded with "no" option;
+      3. If no "y" or "n" is returned it means that storage file content was read successfully and can be modified
+        and resaved with new data.
+    */
+
+    if (storageContentReadResult === "y") {
       await saveDataToStorage(dataToBeSaved, storageFilePath);
-    } else if (storageReadResult === "n") {
-      throw new Error(STORAGE_FILE_CORRUPTED);
+    } else if (storageContentReadResult === "n") {
+      throw new Error(USER_ACCEPTED_CORRUPTED_STORAGE_FILE);
     } else {
-      dataToBeSaved = storageReadResult;
+      dataToBeSaved = storageContentReadResult;
 
       dataToBeSaved[key] = value;
 
@@ -56,13 +67,12 @@ export async function retrieveDataFromStorageByKey(key) {
   const storageFileExists = await isExist(storageFilePath);
 
   if (storageFileExists) {
-    const storageReadResult = await readDataFromStorageAndReturnParsingResult(
-      storageFilePath
-    );
+    const storageContentReadResult =
+      await readDataFromStorageAndReturnParsingResult(storageFilePath);
 
-    if (storageReadResult === "y") {
-    } else if (storageReadResult === "n") {
-      throw new Error(STORAGE_FILE_CORRUPTED);
+    if (storageContentReadResult === "y") {
+    } else if (storageContentReadResult === "n") {
+      throw new Error(CORRUPTED_STORAGE_FILE);
     } else {
       dataToBeSaved[key] = value;
     }
@@ -97,49 +107,23 @@ async function saveDataToStorage(data, path) {
 
 async function readDataFromStorageAndReturnParsingResult(path) {
   try {
-    const fileContent = await fsPromises.readFile(path, "utf-8");
+    const storageFileContent = await fsPromises.readFile(path, "utf-8");
 
-    const parsingResult = await parseJSONAndReturnResult(fileContent);
+    const parsingResult = await parseJSONAndReturnResult(storageFileContent);
 
     return parsingResult;
   } catch (error) {
-    throw new Error(UNKNOWN_ERROR);
+    if (error.message === CORRUPTED_STORAGE_FILE) {
+      const userResponse = await getUserResponse(
+        "Seems that storage file is corrupted. In order to continue to work properly, it is required to either manually fix the storage file or overwrite it. Would you like to overwrite it?",
+        ["y", "n"],
+        "y"
+      );
+      return userResponse;
+    } else {
+      throw new Error(UNKNOWN_ERROR);
+    }
   }
-}
-
-////////////////////////////////////////////////////////////
-
-async function getUserResponse(questionText, permittedResponses = null) {
-  const readLineInterface = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  let userResponse = await new Promise((resolve) => {
-    readLineInterface.question(questionText, (answer) => {
-      resolve(answer.toLowerCase());
-    });
-  });
-
-  if (!permittedResponses || permittedResponses.includes(userResponse)) {
-    readLineInterface.close();
-  } else {
-    const attention_STYLED = chalk.bgYellow(chalk.bold(` ATTENTION: `));
-    const currentUserResponse_STYLED = chalk.bgRed(
-      chalk.bold(` ${userResponse} `)
-    );
-    const permittedReponses_STYLED = chalk.bgGreen(
-      chalk.bold(` ${permittedResponses.join("/")} `)
-    );
-
-    const wrongResponseMessage = `${attention_STYLED} seems like you have provided value ${currentUserResponse_STYLED} that does not match any of the expected values ${permittedReponses_STYLED}. In order to proceed, please, provide a value, either in lower- or upper-case, matching some expected value`;
-
-    console.log(wrongResponseMessage);
-
-    userResponse = await getUserResponse(questionText, permittedResponses);
-  }
-
-  return userResponse;
 }
 
 ////////////////////////////////////////////////////////////
@@ -150,12 +134,7 @@ async function parseJSONAndReturnResult(dataToParse) {
 
     return parsedData;
   } catch (error) {
-    const selectedOption = await getUserResponse(
-      "Seems the storage file is corrupted. Do you want to completely overwrite it? (y/n)",
-      ["y", "n"]
-    );
-
-    return selectedOption;
+    throw new Error(CORRUPTED_STORAGE_FILE);
   }
 }
 

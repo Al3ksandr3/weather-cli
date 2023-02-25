@@ -3,7 +3,7 @@ import chalk from "chalk";
 import {
   getTextWithoutExtraSpaces,
   createTopOffsetForText,
-} from "../utils/transformers.js";
+} from "../utils/textTransformers.js";
 
 // ------ START ------ //
 
@@ -63,9 +63,9 @@ export function printHelpInfo() {
   ${styledStuff.akArg} - stands for ${styledStuff.apiKey} and can be used to set/change API key of a user (for example: ${styledStuff.apiKeyExampleText}); 
     `);
 
-  const styledDelpInfoWithOffset = createTopOffsetForText(styledHelpInfo);
+  const styledHelpInfoWithOffset = createTopOffsetForText(styledHelpInfo);
 
-  console.log(styledDelpInfoWithOffset);
+  console.log(styledHelpInfoWithOffset);
 }
 
 ////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ export function printWrongTypeValueForKeyMessage(key, keyShorthand) {
 
 ////////////////////////////////////////////////////////////
 
-export function printUnknownKeysMessage(listOfUnknownKeys) {
+function printUnknownKeysMessage(listOfUnknownKeys) {
   const unknownKeysMessagePrefix = chalk.bold("ATTENTION:");
 
   const unknownKeys = chalk.bold(
@@ -106,6 +106,58 @@ export function printUnknownKeysMessage(listOfUnknownKeys) {
   );
 
   console.log(styledUnknownKeysMessageWithOffset);
+}
+
+////////////////////////////////////////////////////////////
+
+export function checkForUnknownKeysPassedAndPrintIfRequired(
+  argsObject,
+  knownKeys
+) {
+  const argsObjectKeys = Object.keys(argsObject);
+
+  const listOfUnknownKeys = argsObjectKeys.filter(
+    (key) => knownKeys.includes(key) === false
+  );
+
+  if (listOfUnknownKeys.length !== 0) {
+    printUnknownKeysMessage(listOfUnknownKeys);
+  }
+}
+
+////////////////////////////////////////////////////////////
+
+export function printWrongResponseMessage(userResponse, permittedResponses) {
+  const wrongResponsePrefix = chalk.bold("WRONG RESPONSE:");
+
+  const styledUserResponse = chalk.bold(userResponse);
+
+  const styledPermittedResponses = chalk.bgGreen(
+    chalk.bold(permittedResponses.join("/"))
+  );
+
+  const styledWrongResponseMessage = `${wrongResponsePrefix} seems like you have provided value ${styledUserResponse} that does not match any of the expected values ${styledPermittedResponses}. In order to proceed, please, provide a value, either in lower- or upper-case, matching some expected value or just press ENTER key to applu default value.`;
+
+  const styledWrongResponseMessageWithOffset = createTopOffsetForText(
+    styledWrongResponseMessage
+  );
+
+  console.log(styledWrongResponseMessageWithOffset);
+}
+
+////////////////////////////////////////////////////////////
+
+export function printWarningMessage(warningMessage) {
+  const warningMessagePrefix = chalk.bold("WARNING:");
+
+  const styledWarningMessage = chalk.bgYellow(
+    `${warningMessagePrefix} ${warningMessage}`
+  );
+
+  const styledWarningMessageWithOffeset =
+    createTopOffsetForText(styledWarningMessage);
+
+  console.log(styledWarningMessageWithOffeset);
 }
 
 // ------ END ------ //
