@@ -7,6 +7,7 @@ import chalk from "chalk";
 import {
   CANNOT_SAVE_VALUE_FOR_KEY,
   STORAGE_FILE_CORRUPTED,
+  UNKNOWN_ERROR,
 } from "../utils/constants.js";
 
 // ------ START ------ //
@@ -51,6 +52,28 @@ export async function mapKeyToValueAndSave(key, value) {
 
 ////////////////////////////////////////////////////////////
 
+export async function retrieveDataFromStorageByKey(key) {
+  const storageFileExists = await isExist(storageFilePath);
+
+  if (storageFileExists) {
+    const storageReadResult = await readDataFromStorageAndReturnParsingResult(
+      storageFilePath
+    );
+
+    if (storageReadResult === "y") {
+    } else if (storageReadResult === "n") {
+      throw new Error(STORAGE_FILE_CORRUPTED);
+    } else {
+      dataToBeSaved[key] = value;
+    }
+  }
+
+  if (!storageFileExists) {
+  }
+}
+
+////////////////////////////////////////////////////////////
+
 async function isExist(path) {
   try {
     await fsPromises.stat(path);
@@ -79,7 +102,9 @@ async function readDataFromStorageAndReturnParsingResult(path) {
     const parsingResult = await parseJSONAndReturnResult(fileContent);
 
     return parsingResult;
-  } catch (error) {}
+  } catch (error) {
+    throw new Error(UNKNOWN_ERROR);
+  }
 }
 
 ////////////////////////////////////////////////////////////

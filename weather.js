@@ -9,6 +9,7 @@ import {
   NO_ARGUMENTS_PASSED,
   CANNOT_SAVE_VALUE_FOR_KEY,
   STORAGE_FILE_CORRUPTED,
+  UNKNOWN_ERROR,
 } from "./utils/constants.js";
 
 import {
@@ -19,7 +20,10 @@ import {
   printUnknownKeysMessage,
 } from "./services/loggers.js";
 
-import { mapKeyToValueAndSave } from "./services/storage.js";
+import {
+  mapKeyToValueAndSave,
+  retrieveDataFromStorageByKey,
+} from "./services/storage.js";
 
 import { validateValueForKeyByDataTypeOrThrow } from "./services/validators.js";
 
@@ -62,10 +66,32 @@ async function validateValueForKeyAndInitializeSavingProcess(
         "seems like storage file is corrupted. Please, fix it manually or override with the new data using CLI."
       );
     }
+
+    if (error.message === UNKNOWN_ERROR) {
+      const styledEmailAddress = "weatherCLIDemoInfo@gmail.com";
+
+      printErrorMessage(
+        `seems there is an unknown error. Please, report it to the following email ${styledEmailAddress}.`
+      );
+    }
   }
 }
 
 ////////////////////////////////////////////////////////////
+
+async function accessDataByKeyOrHandleErrors(key) {
+  try {
+    const data = await retrieveDataFromStorageByKey(key);
+
+    return data;
+  } catch (error) {
+    if (error.message === STORAGE_FILE_CORRUPTED) {
+      printErrorMessage(
+        "seems like storage file is corrupted. Please, fix it manually or override with the new data using CLI."
+      );
+    }
+  }
+}
 
 // ------ CLI ENTRY POINT ------ //
 
@@ -75,7 +101,21 @@ async function startCLI() {
   const argsObject = getArgs(process);
 
   if (argsObject === NO_ARGUMENTS_PASSED) {
-    // implement weather displaying logic;
+    const city = await accessDataByKeyOrHandleErrors("city");
+    const apiKey = await accessDataByKeyOrHandleErrors("apiKey");
+
+    const cityBolded = chalk.bold("city");
+    const apiKeyBolded = chalk.bold("API key");
+
+    if (!city && !apiKey) {
+      printErrorMessage(
+        `seems there is no value set for ${cityBolded} and ${apiKeyBolded}. Please, provide both - ${cityBolded} and ${chalk.bold(
+          "API key"
+        )}.`
+      );
+    }
+
+    return;
   }
 
   if (argsObject.h) {
