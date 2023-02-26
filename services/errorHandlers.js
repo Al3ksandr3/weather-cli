@@ -6,7 +6,8 @@ import {
   UNKNOWN_ERROR,
   USER_ACCEPTED_CORRUPTED_STORAGE_FILE,
   STORAGE_FILE_DOES_NOT_EXIST,
-  VALUE_IS_NOT_SET_FOR_KEY,
+  VALUE_IS_NOT_SET_FOR_THE_KEY,
+  SOME_INFO_IS_MISSED,
 } from "../utils/constants.js";
 
 import {
@@ -55,6 +56,7 @@ export function handleErrorsForValidationAndSave(error, key, keyShorthand) {
   if (error.message) {
     printErrorMessage(error.message);
   }
+  return;
 }
 
 ////////////////////////////////////////////////////////////
@@ -68,7 +70,7 @@ export function handleErrorsForValueRetrievalByKeyFromStorage(
     printErrorMessage(
       `seems like storage file with information about your city and API key for weather service doesn't exist. Therefore, weather information for your current location can't be fetched. Please, set the respective values or get information by using ${chalk.bold(
         "weather -h"
-      )}`
+      )}.`
     );
     return;
   }
@@ -80,13 +82,13 @@ export function handleErrorsForValueRetrievalByKeyFromStorage(
     return;
   }
 
-  if (error.message === VALUE_IS_NOT_SET_FOR_KEY) {
+  if (error.message === VALUE_IS_NOT_SET_FOR_THE_KEY) {
     const styledKey = chalk.bold(`${key}(${keyShorthand})`);
 
     printErrorMessage(
-      `seems like there is no value set for the ${styledKey} argument.`
+      `seems like there is no value set for the ${styledKey} key in a storage file.`
     );
-    return;
+    return null;
   }
 
   // UNKNOWN_ERRORs are errors that might be thrown in some distinct cases which I am aware of
@@ -106,21 +108,33 @@ export function handleErrorsForValueRetrievalByKeyFromStorage(
 
   if (error.message) {
     printErrorMessage(error.message);
+    return;
+  }
+}
+
+////////////////////////////////////////////////////////////
+
+export function handleErrorsForWeatherDataRequest(error) {
+  if (error.message === SOME_INFO_IS_MISSED) {
+    printErrorMessage(
+      "seems like some information required for making an API call to a weather service is missed."
+    );
+    return;
+  }
+
+  if (error.name === "AxiosError") {
+    const styledCityKey = chalk.bold("city");
+    const styledAPIKey = chalk.bold("apiKey");
+
+    if (error.message.includes("401")) {
+      printErrorMessage(
+        `value set for ${styledAPIKey} and/or ${styledCityKey} key(s) is(are) not correct.`
+      );
+    } else {
+      printErrorMessage(`value set for ${styledCityKey} key is not correct.`);
+    }
+    return;
   }
 }
 
 // ------ END ------ //
-
-// const city = await accessDataByKeyOrHandleErrors("city");
-//     const apiKey = await accessDataByKeyOrHandleErrors("apiKey");
-
-//     const cityBolded = chalk.bold("city");
-//     const apiKeyBolded = chalk.bold("API key");
-
-//     if (!city && !apiKey) {
-//       printErrorMessage(
-//         `seems there is no value set for ${cityBolded} and ${apiKeyBolded}. Please, provide both - ${cityBolded} and ${chalk.bold(
-//           "API key"
-//         )}.`
-//       );
-//     }

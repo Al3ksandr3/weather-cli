@@ -39,7 +39,7 @@ export async function validateValueForKeyAndInitializeSavingProcess(
 
     // STEP III - if saving process completes successfully, print success message;
     printSuccessMessage(
-      `value for ${chalk.bold(key)} field was successfully set/modified!`
+      `value for ${chalk.bold(key)} key was successfully set/modified!`
     );
   } catch (error) {
     // STEP II.2 - if validation or saving process fails, handle errors;

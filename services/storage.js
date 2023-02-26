@@ -8,7 +8,7 @@ import {
   USER_ACCEPTED_CORRUPTED_STORAGE_FILE,
   UNKNOWN_ERROR,
   STORAGE_FILE_DOES_NOT_EXIST,
-  VALUE_IS_NOT_SET_FOR_KEY,
+  VALUE_IS_NOT_SET_FOR_THE_KEY,
 } from "../utils/constants.js";
 
 import { getUserResponse } from "./prompt.js";
@@ -95,13 +95,14 @@ export async function retrieveValueFromStorageByKey(key) {
 
     if (storageContentReadResult === "y") {
       await saveDataToStorage({}, storageFilePath);
+      throw new Error(VALUE_IS_NOT_SET_FOR_THE_KEY);
     } else if (storageContentReadResult === "n") {
       throw new Error(USER_ACCEPTED_CORRUPTED_STORAGE_FILE);
     } else {
       const retrievedValue = storageContentReadResult[key];
 
       if (retrievedValue === undefined) {
-        throw new Error(VALUE_IS_NOT_SET_FOR_KEY);
+        throw new Error(VALUE_IS_NOT_SET_FOR_THE_KEY);
       } else {
         return retrievedValue;
       }

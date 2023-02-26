@@ -11,9 +11,9 @@ import {
 
 import { validateValueForKeyAndInitializeSavingProcess } from "./services/validators.js";
 
-// ------ START ------ //
+import { getWeather } from "./services/weatherAPI.js";
 
-// ------ CLI ENTRY POINT ------ //
+// ------ START ------ //
 
 async function startCLI() {
   const knownKeys = ["h", "c", "ak"]; // h - help, c - city, ak - API key
@@ -21,6 +21,8 @@ async function startCLI() {
   const argsObject = getArgs(process);
 
   if (argsObject === NO_ARGUMENTS_PASSED) {
+    const weatherData = await getWeather(["city", "apiKey"], ["-c", "-ak"]);
+
     return;
   }
 
@@ -48,6 +50,8 @@ async function startCLI() {
 
   checkForUnknownKeysPassedAndPrintIfRequired(argsObject, knownKeys);
 }
+
+// ------ CLI ENTRY POINT ------ //
 
 startCLI();
 
