@@ -13,6 +13,8 @@ import { validateValueForKeyAndInitializeSavingProcess } from "./services/valida
 
 import { getWeather } from "./services/weatherAPI.js";
 
+import { weatherDisplay } from "./services/weatherDisplay.js";
+
 // ------ START ------ //
 
 async function startCLI() {
@@ -22,7 +24,9 @@ async function startCLI() {
 
   if (argsObject === NO_ARGUMENTS_PASSED) {
     const weatherData = await getWeather(["city", "apiKey"], ["-c", "-ak"]);
-
+    if (weatherData) {
+      weatherDisplay(weatherData);
+    }
     return;
   }
 

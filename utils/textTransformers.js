@@ -1,4 +1,4 @@
-export function getTextWithoutExtraSpaces(text) {
+export function getTextWithoutExtraSpaces(text, substituteCharacterForSpace) {
   let textWithoutExtraSpaces = "";
 
   for (let character of text) {
@@ -11,6 +11,8 @@ export function getTextWithoutExtraSpaces(text) {
         lastCharacterOfCurrentMasterText === "\n")
     ) {
       continue;
+    } else if (character === substituteCharacterForSpace) {
+      textWithoutExtraSpaces += " ";
     } else {
       textWithoutExtraSpaces += character;
     }

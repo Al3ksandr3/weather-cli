@@ -92,7 +92,7 @@ export async function getWeather(keys, keyShorthands) {
 
     const requestToWeatherService = await axios.get(
       "https://api.openweathermap.org/data/2.5/weather",
-      { params: mappedParams }
+      { params: { ...mappedParams, units: "metric" } }
     );
 
     return requestToWeatherService.data;
