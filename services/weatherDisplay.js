@@ -20,7 +20,7 @@ export function weatherDisplay(weatherInfo) {
    ${weatherIcon} @${weatherDescription.description}
     Temperature: ${Math.round(
       weatherInfo.main.temp
-    )}°C (feels like - ${Math.round(weatherInfo.main.feels_like)}°C)
+    )}°C (feels like: ${Math.round(weatherInfo.main.feels_like)}°C)
     Pressure: ${weatherInfo.main.pressure} hPa
     Humidity: ${weatherInfo.main.humidity}%
     Wind speed: ${weatherInfo.wind.speed} meter/sec
